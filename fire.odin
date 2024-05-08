@@ -1,6 +1,8 @@
 package main
 
+import "core:fmt"
 import "core:math/rand"
+import "core:mem/virtual"
 import "core:slice"
 import "core:time"
 import "vendor:raylib"
@@ -103,6 +105,7 @@ render_fire :: proc(fire_pixels: []int) {
 }
 
 init_fire :: proc(fire_pixels: []int) {
+	fmt.println(len(fire_pixels))
 	for i in 0 ..< FIRE_WIDTH {
 		fire_pixels[(FIRE_HEIGHT - 1) * FIRE_WIDTH + i] = PALETTE_SIZE - 1
 	}
@@ -115,18 +118,29 @@ reset_fire :: proc(fire_pixels: []int) {
 
 main :: proc() {
 	raylib.InitWindow(FIRE_WIDTH * PIXEL_WIDTH, FIRE_HEIGHT * PIXEL_HEIGHT, "Doom Fire")
-
 	defer raylib.CloseWindow()
 
 	raylib.SetTargetFPS(60)
-
-	fire_pixels: [FIRE_WIDTH * FIRE_HEIGHT]int
-	init_fire(fire_pixels[:])
+	arena: virtual.Arena
+	if err := virtual.arena_init_static(
+		&arena,
+		reserved = FIRE_WIDTH * FIRE_HEIGHT * size_of(int),
+		commit_size = FIRE_WIDTH * FIRE_HEIGHT * size_of(int),
+	); err != nil {
+		fmt.panicf("couldn't make arena: %v", err)
+	}
+	defer virtual.arena_destroy(&arena)
+	//	fire_pixels: [FIRE_WIDTH * FIRE_HEIGHT]int
+	arena_allocator := virtual.arena_allocator(&arena)
+	fire_pixels := make([]int, FIRE_WIDTH * FIRE_HEIGHT, allocator = arena_allocator)
+	init_fire(fire_pixels)
 	draw_fps := true
 	for !raylib.WindowShouldClose() {
 		raylib.ClearBackground(raylib.Color{0, 0, 0, 0})
+
 		raylib.BeginDrawing()
 		defer raylib.EndDrawing()
+
 		render_fire(fire_pixels[:])
 		if draw_fps {
 			raylib.DrawFPS(10, 10)
@@ -137,6 +151,7 @@ main :: proc() {
 		if raylib.IsKeyPressed(raylib.KeyboardKey.R) {
 			reset_fire(fire_pixels[:])
 		}
+
 		if raylib.IsKeyPressed(raylib.KeyboardKey.F) {
 			draw_fps = !draw_fps
 		}
