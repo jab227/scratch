@@ -46,7 +46,7 @@ ball_update :: proc(ctx: Sim_Context, ball: Ball) -> Ball {
     velocity := ball.v
     pos := ball.pos
 
-    for i in 0 ..< substeps {
+    for _ in 0 ..< substeps {
         velocity += Velocity(ctx.g) * sdt
         pos += Position(velocity) * sdt
     }
