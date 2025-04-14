@@ -56,7 +56,7 @@ simulation_init :: proc(state: ^Simulation_State, count := 100, allocator := con
     state.matching_factor = f32(0.05)
     state.avoid_factor = f32(0.05)
     state.centering_factor = f32(0.0005)
-    state.turnfactor = f32(2.0)
+    state.turnfactor = f32(0.05)
     state.maxspeed = f32(3.0)
     state.minspeed = f32(2.0)
 }
@@ -161,7 +161,7 @@ main :: proc() {
     rl.SetTargetFPS(60)
 
     state: Simulation_State
-    simulation_init(&state, 12)
+    simulation_init(&state, 200)
     defer simulation_destroy(&state)
 
     for !rl.WindowShouldClose() {
